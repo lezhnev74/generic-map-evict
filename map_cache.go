@@ -1,5 +1,7 @@
 package mapCache
 
+import "sync"
+
 type Getter[T comparable] func(key []T) map[T]any
 
 type MapCache[T comparable] struct {
@@ -8,9 +10,12 @@ type MapCache[T comparable] struct {
 	factoryFn func(key T) any
 	freeFn    func(key T, object any) // free up evicted data (optional)
 	evict     EvictionPolicy[T]
+	l         sync.Locker
 }
 
 func (m *MapCache[T]) Get(keys []T) map[T]any {
+	m.l.Lock()
+	defer m.l.Unlock()
 	ret := make(map[T]any, len(keys))
 	for _, key := range keys {
 		if _, ok := m.m[key]; !ok {
@@ -40,6 +45,7 @@ func NewMapCacheEvictUnused[T comparable](capacity int, fn func(key T) any) MapC
 		factoryFn: fn,
 		freeFn:    func(key T, object any) {}, // no-op by default
 		evict:     newEvictFirstUsed(&m),
+		l:         &sync.Mutex{},
 	}
 	return m
 }
