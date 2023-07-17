@@ -32,3 +32,9 @@ instances := m.Get([]string{"a1", "a2", "a3", "a4", "a5", "a6"})
 // m.Count() == 5
 
 ```
+
+Optionally, you can provide a destructor for evicted items:
+```go
+m := NewMapCacheEvictUnused(capacity, factoryFn)
+m.SetFreeFn(func (key string, val any) { close(val) }) // <-- each evicted item goes through this func
+```

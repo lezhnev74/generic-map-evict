@@ -3,6 +3,7 @@ package mapCache
 import (
 	"github.com/stretchr/testify/require"
 	"testing"
+	"time"
 )
 
 func TestAPI(t *testing.T) {
@@ -28,4 +29,20 @@ func TestAPI(t *testing.T) {
 	instances = m.Get([]string{"a1", "a2", "a3", "a4", "a5", "a6"})
 	require.Len(t, instances, 6)
 	require.Equal(t, 5, m.Count())
+}
+
+func TestFreeProcedure(t *testing.T) {
+	capacity := 1
+	factoryFn := func(key string) any { return key }
+	freed := []string{}
+	m := NewMapCacheEvictUnused(capacity, factoryFn)
+	m.SetFreeFn(func(key string, val any) {
+		freed = append(freed, key)
+	})
+
+	m.Get([]string{"a"})
+	time.Sleep(time.Millisecond)
+	m.Get([]string{"b"})
+
+	require.EqualValues(t, []string{"a"}, freed)
 }
