@@ -1,4 +1,4 @@
-module mapWithEviction
+module github.com/lezhnev74/generic-map-evict
 
 go 1.20
 
